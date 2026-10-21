@@ -1,0 +1,40 @@
+*&---------------------------------------------------------------------*
+*& Include          ZOR_CUST_TOP
+*&---------------------------------------------------------------------*
+
+TABLES: kna1.
+
+TYPES: BEGIN OF ty_customer,
+         kunnr TYPE kna1-kunnr,
+         name1 TYPE kna1-name1,
+       END OF ty_customer.
+
+TYPES: BEGIN OF ty_order,
+         audat  TYPE vbak-audat,
+         vbeln  TYPE vbap-vbeln,
+         posnr  TYPE vbap-posnr,
+         kwmeng TYPE vbap-kwmeng,
+         matnr  TYPE vbap-matnr,
+         maktx  TYPE makt-maktx,
+       END OF ty_order.
+
+TYPES tt_order TYPE STANDARD TABLE OF ty_order
+               WITH DEFAULT KEY.
+
+TYPES: BEGIN OF ty_final,
+         kunnr  TYPE kna1-kunnr,
+         name1  TYPE kna1-name1,
+         audat  TYPE vbak-audat,
+         vbeln  TYPE vbap-vbeln,
+         posnr  TYPE vbap-posnr,
+         kwmeng TYPE vbap-kwmeng,
+         matnr  TYPE vbap-matnr,
+         maktx  TYPE makt-maktx,
+       END OF ty_final.
+
+TYPES tt_final TYPE STANDARD TABLE OF ty_final
+               WITH DEFAULT KEY.
+
+DATA: gs_customer TYPE ty_customer,
+      gt_orders   TYPE tt_order,
+      gt_final    TYPE tt_final.

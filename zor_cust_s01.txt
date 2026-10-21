@@ -1,0 +1,9 @@
+*&---------------------------------------------------------------------*
+*& Include          ZOR_CUST_S01
+*&---------------------------------------------------------------------*
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE text-001.
+
+  PARAMETERS: p_kunnr TYPE kna1-kunnr OBLIGATORY.
+
+SELECTION-SCREEN END OF BLOCK b1.

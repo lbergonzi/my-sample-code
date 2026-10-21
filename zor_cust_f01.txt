@@ -1,0 +1,112 @@
+*&---------------------------------------------------------------------*
+*& Include          ZOR_CUST_F01
+*&---------------------------------------------------------------------*
+
+FORM f_check_auth.
+
+  AUTHORITY-CHECK OBJECT 'S_PROGRAM'
+    ID 'P_ACTION' FIELD 'SUBMIT'
+    ID 'P_GROUP'  FIELD 'ZREPORTS'.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'Not authorized to execute this report'
+      TYPE 'E'.
+  ENDIF.
+
+ENDFORM.
+
+
+FORM f_get_customer
+  USING    iv_kunnr TYPE kna1-kunnr
+  CHANGING cs_customer TYPE ty_customer.
+
+  CLEAR cs_customer.
+
+  SELECT SINGLE kunnr,
+                name1
+    FROM kna1
+    WHERE kunnr = @iv_kunnr
+    INTO CORRESPONDING FIELDS OF @cs_customer.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'Customer not found' TYPE 'E'.
+  ENDIF.
+
+ENDFORM.
+
+
+FORM f_get_orders
+  USING    iv_kunnr TYPE kna1-kunnr
+  CHANGING ct_orders TYPE tt_order.
+
+  CLEAR ct_orders.
+
+  SELECT header~audat,
+         detail~vbeln,
+         detail~posnr,
+         detail~kwmeng,
+         detail~matnr,
+         material~maktx
+    FROM vbak AS header
+    INNER JOIN vbap AS detail
+      ON detail~vbeln = header~vbeln
+    LEFT OUTER JOIN makt AS material
+      ON material~matnr = detail~matnr
+     AND material~spras = @sy-langu
+    WHERE header~kunnr = @iv_kunnr
+    INTO CORRESPONDING FIELDS OF TABLE @ct_orders.
+
+ENDFORM.
+
+
+FORM f_prepare_final
+  USING    is_customer TYPE ty_customer
+           it_orders   TYPE tt_order
+  CHANGING ct_final    TYPE tt_final.
+
+  DATA: ls_order TYPE ty_order,
+        ls_final TYPE ty_final.
+
+  CLEAR ct_final.
+
+  LOOP AT it_orders INTO ls_order.
+
+    CLEAR ls_final.
+
+    ls_final-kunnr  = is_customer-kunnr.
+    ls_final-name1  = is_customer-name1.
+    ls_final-audat  = ls_order-audat.
+    ls_final-vbeln  = ls_order-vbeln.
+    ls_final-posnr  = ls_order-posnr.
+    ls_final-kwmeng = ls_order-kwmeng.
+    ls_final-matnr  = ls_order-matnr.
+    ls_final-maktx  = ls_order-maktx.
+
+    APPEND ls_final TO ct_final.
+
+  ENDLOOP.
+
+ENDFORM.
+
+
+FORM f_display_alv
+  CHANGING ct_final TYPE tt_final.
+
+  DATA: lo_alv TYPE REF TO cl_salv_table.
+
+  TRY.
+
+      cl_salv_table=>factory(
+        IMPORTING
+          r_salv_table = lo_alv
+        CHANGING
+          t_table      = ct_final ).
+
+      lo_alv->display( ).
+
+    CATCH cx_salv_msg.
+      MESSAGE 'Unable to display ALV' TYPE 'E'.
+
+  ENDTRY.
+
+ENDFORM.
